@@ -792,51 +792,28 @@
   // ============================================================================
 
   /**
-   * Finds the Inbox element in Gmail navigation
-   * @returns {HTMLElement|null} Inbox element or null
-   */
-  function findInboxElement() {
-    // Look for the Inbox link/element
-    const allLinks = document.querySelectorAll('a, div, span');
-    for (let i = 0; i < allLinks.length; i++) {
-      const el = allLinks[i];
-      const text = el.textContent ? el.textContent.trim() : '';
-
-      // Look for exact "Inbox" text with number or alone
-      if (text === 'Inbox' || text.match(/^Inbox\s*\d*$/)) {
-        // Make sure it's in the left sidebar (not too far right)
-        const rect = el.getBoundingClientRect();
-        if (rect.left < 300) {
-          console.log('[WizMail] Found Inbox element');
-          return el;
-        }
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Finds Gmail's navigation container (parent of Inbox)
-   * @returns {HTMLElement|null} Navigation container or null
+   * Finds Gmail's left navigation panel
+   * Uses same approach as working Tampermonkey script
+   * @returns {HTMLElement|null} Navigation element or null
    */
   function findGmailNavigationContainer() {
-    const inbox = findInboxElement();
-    if (inbox) {
-      // Navigate up to find the container that holds all nav items
-      let parent = inbox.parentElement;
-      let depth = 0;
-      while (parent && depth < 10) {
-        // Look for a parent that contains multiple navigation items
-        const text = parent.textContent || '';
-        if (text.includes('Inbox') &&
-            text.includes('Starred') &&
-            (text.includes('Snoozed') || text.includes('Sent'))) {
-          console.log('[WizMail] Found navigation container (depth:', depth, ')');
-          return parent;
-        }
-        parent = parent.parentElement;
-        depth++;
-      }
+    // Try exact selectors from working script
+    let nav = document.querySelector('div[role="navigation"]');
+    if (nav) {
+      console.log('[WizMail] Found nav via div[role="navigation"]');
+      return nav;
+    }
+
+    nav = document.querySelector('nav[role="navigation"]');
+    if (nav) {
+      console.log('[WizMail] Found nav via nav[role="navigation"]');
+      return nav;
+    }
+
+    nav = document.querySelector('div[aria-label="Main menu"]');
+    if (nav) {
+      console.log('[WizMail] Found nav via aria-label="Main menu"');
+      return nav;
     }
 
     console.error('[WizMail] Could not find navigation container');
@@ -844,45 +821,23 @@
   }
 
   /**
-   * Finds an insertion point for the panel (before Inbox)
-   * @returns {Object|null} Object with {parent, before} or null
+   * Finds the Labels header element
+   * Uses same approach as working Tampermonkey script
+   * @param {HTMLElement} nav - Navigation container
+   * @returns {HTMLElement|null} Labels element or null
    */
-  function findInsertionPoint() {
-    const inbox = findInboxElement();
-    if (!inbox) {
-      console.error('[WizMail] Cannot find Inbox element for insertion');
-      return null;
-    }
+  function findLabelsHeader(nav) {
+    if (!nav) return null;
 
-    // Find the direct container of the inbox item
-    // We want to insert a sibling before it
-    let inboxContainer = inbox;
-    let depth = 0;
+    // Find an element whose text is exactly "Labels"
+    const textNodes = Array.from(nav.querySelectorAll('span, div, button'));
+    const labelsHeader = textNodes.find(
+      (n) => n.textContent && n.textContent.trim() === 'Labels'
+    );
 
-    // Walk up until we find an element that looks like a nav item container
-    while (inboxContainer.parentElement && depth < 5) {
-      const parent = inboxContainer.parentElement;
-      // Check if parent seems to contain multiple nav items as siblings
-      const siblings = parent.children;
-      if (siblings.length > 3) {
-        // This looks like the right level
-        console.log('[WizMail] Found insertion point before Inbox');
-        return {
-          parent: parent,
-          before: inboxContainer
-        };
-      }
-      inboxContainer = parent;
-      depth++;
-    }
-
-    // Fallback: insert before inbox's parent
-    if (inbox.parentElement) {
-      console.log('[WizMail] Using fallback insertion point');
-      return {
-        parent: inbox.parentElement.parentElement || inbox.parentElement,
-        before: inbox.parentElement
-      };
+    if (labelsHeader) {
+      console.log('[WizMail] Found Labels header');
+      return labelsHeader;
     }
 
     return null;
@@ -890,21 +845,29 @@
 
   /**
    * Inserts panel host element into Gmail DOM
-   * Inserts before Inbox (below Compose, above navigation)
+   * Uses same approach as working Tampermonkey script
    * @param {HTMLElement} hostElement - Host element to insert
    * @returns {boolean} True if inserted successfully
    */
   function insertPanelIntoDOM(hostElement) {
-    const insertionPoint = findInsertionPoint();
+    const nav = findGmailNavigationContainer();
+    if (!nav) {
+      console.error('[WizMail] Gmail navigation not found, cannot insert panel');
+      return false;
+    }
 
-    if (insertionPoint) {
-      insertionPoint.parent.insertBefore(hostElement, insertionPoint.before);
-      console.log('[WizMail] Panel inserted before Inbox');
+    // Try to anchor the panel below the "Labels" header
+    const labelsHeader = findLabelsHeader(nav);
+    if (labelsHeader && labelsHeader.parentElement) {
+      labelsHeader.parentElement.insertAdjacentElement('afterend', hostElement);
+      console.log('[WizMail] Panel inserted after Labels');
       return true;
     }
 
-    console.error('[WizMail] Could not find insertion point');
-    return false;
+    // Fallback: append at end
+    nav.appendChild(hostElement);
+    console.log('[WizMail] Panel appended to nav (fallback)');
+    return true;
   }
 
   /**
@@ -1197,6 +1160,7 @@
 
   /**
    * Initializes the extension
+   * Uses same approach as working Tampermonkey script
    */
   async function initializeExtension() {
     try {
@@ -1222,9 +1186,9 @@
       const delay = 500; // ms
 
       while (attempts < maxAttempts) {
-        const inbox = findInboxElement();
-        if (inbox) {
-          console.log(`[WizMail] Inbox found on attempt ${attempts + 1}`);
+        const nav = findGmailNavigationContainer();
+        if (nav) {
+          console.log(`[WizMail] Navigation found on attempt ${attempts + 1}`);
           await renderPanel();
           setupMutationObserver();
           console.log('[WizMail] Initialization complete');
@@ -1238,7 +1202,7 @@
         attempts++;
       }
 
-      console.error('[WizMail] Failed to find Gmail Inbox after', maxAttempts, 'attempts');
+      console.error('[WizMail] Failed to find Gmail navigation after', maxAttempts, 'attempts');
     } catch (error) {
       console.error('[WizMail] Initialization error:', error);
     }
