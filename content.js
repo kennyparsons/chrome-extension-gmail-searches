@@ -141,36 +141,6 @@
     return sanitized;
   }
 
-  /**
-   * Detects dangerous patterns in import data
-   * Defense-in-depth against code injection attempts
-   * @param {string} jsonString - JSON string to check
-   * @returns {boolean} True if dangerous patterns found
-   */
-  function containsDangerousPatterns(jsonString) {
-    const lowerCase = jsonString.toLowerCase();
-    const patterns = [
-      '<script',
-      'javascript:',
-      'data:',
-      /on[a-z]+=/ // Event handlers like onclick=
-    ];
-    for (let i = 0; i < patterns.length; i++) {
-      const pattern = patterns[i];
-      if (typeof pattern === 'string') {
-        if (lowerCase.includes(pattern)) {
-          return true;
-        }
-      } else {
-        // Regex pattern
-        if (pattern.test(lowerCase)) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
   // ============================================================================
   // STORAGE FUNCTIONS
   // ============================================================================
@@ -281,6 +251,7 @@
 
   /**
    * Creates CSS styles for shadow DOM
+   * Supports both light and dark modes
    * @returns {HTMLStyleElement} Style element
    */
   function createShadowStyles() {
@@ -294,6 +265,39 @@
       .wizmail-container {
         margin: 8px 0;
         padding: 0;
+        background: var(--wizmail-bg, #ffffff);
+        color: var(--wizmail-text, #202124);
+      }
+
+      /* Detect dark mode from Gmail */
+      @media (prefers-color-scheme: dark) {
+        .wizmail-container {
+          --wizmail-bg: #2d2e30;
+          --wizmail-text: #e8eaed;
+          --wizmail-border: #5f6368;
+          --wizmail-hover: #3c4043;
+          --wizmail-btn-bg: #3c4043;
+          --wizmail-btn-border: #5f6368;
+          --wizmail-btn-text: #e8eaed;
+          --wizmail-input-bg: #3c4043;
+          --wizmail-input-border: #5f6368;
+          --wizmail-input-text: #e8eaed;
+        }
+      }
+
+      @media (prefers-color-scheme: light) {
+        .wizmail-container {
+          --wizmail-bg: #ffffff;
+          --wizmail-text: #202124;
+          --wizmail-border: #e0e0e0;
+          --wizmail-hover: #f5f5f5;
+          --wizmail-btn-bg: #ffffff;
+          --wizmail-btn-border: #dadce0;
+          --wizmail-btn-text: #5f6368;
+          --wizmail-input-bg: #ffffff;
+          --wizmail-input-border: #dadce0;
+          --wizmail-input-text: #202124;
+        }
       }
 
       .wizmail-header {
@@ -301,34 +305,28 @@
         justify-content: space-between;
         align-items: center;
         padding: 8px 16px;
-        border-bottom: 1px solid #e0e0e0;
+        border-bottom: 1px solid var(--wizmail-border, #e0e0e0);
       }
 
       .wizmail-title {
         font-size: 14px;
         font-weight: 500;
-        color: #202124;
+        color: var(--wizmail-text, #202124);
         margin: 0;
       }
 
-      .wizmail-buttons {
-        display: flex;
-        gap: 8px;
-      }
-
-      .wizmail-btn {
+      .wizmail-add-btn {
         font-size: 11px;
-        padding: 4px 8px;
+        padding: 4px 12px;
         cursor: pointer;
-        border: 1px solid #dadce0;
-        background: #fff;
+        border: 1px solid var(--wizmail-btn-border, #dadce0);
+        background: var(--wizmail-btn-bg, #fff);
         border-radius: 4px;
-        color: #5f6368;
+        color: var(--wizmail-btn-text, #5f6368);
       }
 
-      .wizmail-btn:hover {
-        background: #f8f9fa;
-        border-color: #dadce0;
+      .wizmail-add-btn:hover {
+        opacity: 0.8;
       }
 
       .wizmail-list {
@@ -338,104 +336,143 @@
       }
 
       .wizmail-item {
+        display: flex;
+        align-items: center;
         padding: 8px 16px;
-        cursor: pointer;
-        font-size: 14px;
-        color: #202124;
+        border-bottom: 1px solid var(--wizmail-border, #e0e0e0);
         transition: background-color 0.15s;
       }
 
       .wizmail-item:hover {
-        background-color: #f5f5f5;
+        background-color: var(--wizmail-hover, #f5f5f5);
+      }
+
+      .wizmail-item-content {
+        flex: 1;
+        cursor: pointer;
+        min-width: 0;
       }
 
       .wizmail-item-name {
         display: block;
-      }
-
-      .wizmail-modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 1000000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .wizmail-modal-dialog {
-        background: #fff;
-        padding: 24px;
-        border-radius: 8px;
-        max-width: 600px;
-        max-height: 80vh;
-        overflow: auto;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-      }
-
-      .wizmail-modal-title {
-        margin: 0 0 16px 0;
-        font-size: 18px;
-        font-weight: 500;
-        color: #202124;
-      }
-
-      .wizmail-modal-text {
-        margin: 0 0 16px 0;
         font-size: 14px;
-        color: #5f6368;
+        color: var(--wizmail-text, #202124);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
-      .wizmail-modal-textarea {
-        width: 100%;
-        min-height: 300px;
-        font-family: monospace;
-        font-size: 12px;
-        padding: 8px;
-        border: 1px solid #dadce0;
-        border-radius: 4px;
-        margin-bottom: 16px;
-        box-sizing: border-box;
+      .wizmail-item-query {
+        display: block;
+        font-size: 11px;
+        color: var(--wizmail-btn-text, #5f6368);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-top: 2px;
       }
 
-      .wizmail-modal-error {
+      .wizmail-item-actions {
+        display: flex;
+        gap: 4px;
+        margin-left: 8px;
+        opacity: 0;
+        transition: opacity 0.15s;
+      }
+
+      .wizmail-item:hover .wizmail-item-actions {
+        opacity: 1;
+      }
+
+      .wizmail-item-btn {
+        font-size: 11px;
+        padding: 2px 8px;
+        cursor: pointer;
+        border: 1px solid var(--wizmail-btn-border, #dadce0);
+        background: var(--wizmail-btn-bg, #fff);
+        border-radius: 3px;
+        color: var(--wizmail-btn-text, #5f6368);
+      }
+
+      .wizmail-item-btn:hover {
+        opacity: 0.7;
+      }
+
+      .wizmail-item-btn-delete {
         color: #d93025;
+      }
+
+      .wizmail-add-form {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--wizmail-border, #e0e0e0);
+        background: var(--wizmail-hover, #f5f5f5);
+      }
+
+      .wizmail-form-group {
+        margin-bottom: 8px;
+      }
+
+      .wizmail-form-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 500;
+        margin-bottom: 4px;
+        color: var(--wizmail-text, #202124);
+      }
+
+      .wizmail-form-input {
+        width: 100%;
+        padding: 6px 8px;
         font-size: 13px;
-        margin-bottom: 16px;
+        border: 1px solid var(--wizmail-input-border, #dadce0);
+        border-radius: 4px;
+        box-sizing: border-box;
+        background: var(--wizmail-input-bg, #fff);
+        color: var(--wizmail-input-text, #202124);
+      }
+
+      .wizmail-form-input:focus {
+        outline: none;
+        border-color: #1a73e8;
+      }
+
+      .wizmail-form-error {
+        font-size: 11px;
+        color: #d93025;
+        margin-top: 4px;
         display: none;
       }
 
-      .wizmail-modal-buttons {
+      .wizmail-form-buttons {
         display: flex;
         gap: 8px;
-        justify-content: flex-end;
+        margin-top: 8px;
       }
 
-      .wizmail-modal-btn {
-        padding: 8px 16px;
-        font-size: 14px;
-        border: 1px solid #dadce0;
-        background: #fff;
+      .wizmail-form-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+        border: 1px solid var(--wizmail-btn-border, #dadce0);
+        background: var(--wizmail-btn-bg, #fff);
         border-radius: 4px;
         cursor: pointer;
-        color: #202124;
+        color: var(--wizmail-btn-text, #5f6368);
       }
 
-      .wizmail-modal-btn-primary {
+      .wizmail-form-btn-primary {
         background: #1a73e8;
         color: #fff;
         border-color: #1a73e8;
       }
 
-      .wizmail-modal-btn:hover {
-        background: #f8f9fa;
+      .wizmail-form-btn:hover {
+        opacity: 0.8;
       }
 
-      .wizmail-modal-btn-primary:hover {
-        background: #1765cc;
+      .wizmail-edit-form {
+        padding: 8px 16px;
+        background: var(--wizmail-hover, #f5f5f5);
+        border-bottom: 1px solid var(--wizmail-border, #e0e0e0);
       }
     `;
     return style;
@@ -446,13 +483,16 @@
   // ============================================================================
 
   /**
-   * Creates a single search list item
+   * Creates a single search list item with edit/delete buttons
    * Query and name set via textContent to prevent XSS
    * @param {Object} search - Search object with name and q
-   * @param {Function} onClick - Click handler
+   * @param {Function} onClick - Click handler for search
+   * @param {Function} onEdit - Edit handler
+   * @param {Function} onDelete - Delete handler
+   * @param {number} index - Index in searches array
    * @returns {HTMLElement|null} List item element or null if invalid
    */
-  function createSearchItem(search, onClick) {
+  function createSearchItem(search, onClick, onEdit, onDelete, index) {
     // Defensive validation
     if (!validateSearchObject(search)) {
       console.warn('[WizMail] Invalid search object, skipping');
@@ -462,53 +502,241 @@
     const li = document.createElement('li');
     li.className = 'wizmail-item';
 
-    const span = document.createElement('span');
-    span.className = 'wizmail-item-name';
-    // SECURITY: Use textContent to prevent XSS
-    span.textContent = search.name;
-    span.title = search.q; // Tooltip showing query
+    const content = document.createElement('div');
+    content.className = 'wizmail-item-content';
 
-    li.addEventListener('click', (e) => {
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'wizmail-item-name';
+    // SECURITY: Use textContent to prevent XSS
+    nameSpan.textContent = search.name;
+
+    const querySpan = document.createElement('span');
+    querySpan.className = 'wizmail-item-query';
+    // SECURITY: Use textContent to prevent XSS
+    querySpan.textContent = search.q;
+
+    content.appendChild(nameSpan);
+    content.appendChild(querySpan);
+
+    content.addEventListener('click', (e) => {
       e.stopPropagation();
       onClick(search);
     });
 
-    li.appendChild(span);
+    const actions = document.createElement('div');
+    actions.className = 'wizmail-item-actions';
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'wizmail-item-btn';
+    editBtn.textContent = 'Edit';
+    editBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      onEdit(index);
+    });
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'wizmail-item-btn wizmail-item-btn-delete';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      onDelete(index);
+    });
+
+    actions.appendChild(editBtn);
+    actions.appendChild(deleteBtn);
+
+    li.appendChild(content);
+    li.appendChild(actions);
+
     return li;
   }
 
   /**
-   * Creates the search list container
-   * @param {Array} searches - Array of search objects
-   * @param {Function} onSearchClick - Click handler for searches
-   * @returns {HTMLElement} Unordered list element
+   * Creates the add search form
+   * @param {Function} onAdd - Callback when search is added
+   * @param {Function} onCancel - Callback when cancelled
+   * @returns {HTMLElement} Form element
    */
-  function createSearchList(searches, onSearchClick) {
-    const ul = document.createElement('ul');
-    ul.className = 'wizmail-list';
+  function createAddForm(onAdd, onCancel) {
+    const form = document.createElement('div');
+    form.className = 'wizmail-add-form';
 
-    if (!Array.isArray(searches) || searches.length === 0) {
-      return ul;
-    }
+    const nameGroup = document.createElement('div');
+    nameGroup.className = 'wizmail-form-group';
 
-    for (let i = 0; i < searches.length; i++) {
-      const item = createSearchItem(searches[i], onSearchClick);
-      if (item !== null) {
-        ul.appendChild(item);
+    const nameLabel = document.createElement('label');
+    nameLabel.className = 'wizmail-form-label';
+    nameLabel.textContent = 'Search Name';
+
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.className = 'wizmail-form-input';
+    nameInput.placeholder = 'e.g., Unread';
+    nameInput.maxLength = MAX_NAME_LENGTH;
+
+    nameGroup.appendChild(nameLabel);
+    nameGroup.appendChild(nameInput);
+
+    const queryGroup = document.createElement('div');
+    queryGroup.className = 'wizmail-form-group';
+
+    const queryLabel = document.createElement('label');
+    queryLabel.className = 'wizmail-form-label';
+    queryLabel.textContent = 'Gmail Query';
+
+    const queryInput = document.createElement('input');
+    queryInput.type = 'text';
+    queryInput.className = 'wizmail-form-input';
+    queryInput.placeholder = 'e.g., is:unread';
+    queryInput.maxLength = MAX_QUERY_LENGTH;
+
+    queryGroup.appendChild(queryLabel);
+    queryGroup.appendChild(queryInput);
+
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'wizmail-form-error';
+
+    const buttons = document.createElement('div');
+    buttons.className = 'wizmail-form-buttons';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'wizmail-form-btn';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', () => {
+      onCancel();
+    });
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'wizmail-form-btn wizmail-form-btn-primary';
+    addBtn.textContent = 'Add';
+    addBtn.addEventListener('click', () => {
+      const name = nameInput.value.trim();
+      const q = queryInput.value.trim();
+
+      if (!validateString(name, MAX_NAME_LENGTH, 'name')) {
+        errorDiv.textContent = 'Invalid search name (1-100 characters)';
+        errorDiv.style.display = 'block';
+        return;
       }
-    }
 
-    return ul;
+      if (!validateString(q, MAX_QUERY_LENGTH, 'query')) {
+        errorDiv.textContent = 'Invalid query (1-500 characters)';
+        errorDiv.style.display = 'block';
+        return;
+      }
+
+      errorDiv.style.display = 'none';
+      onAdd({ name, q });
+    });
+
+    buttons.appendChild(cancelBtn);
+    buttons.appendChild(addBtn);
+
+    form.appendChild(nameGroup);
+    form.appendChild(queryGroup);
+    form.appendChild(errorDiv);
+    form.appendChild(buttons);
+
+    return form;
   }
 
   /**
-   * Creates the panel header with title and buttons
+   * Creates the edit search form
+   * @param {Object} search - Search to edit
+   * @param {Function} onSave - Callback when saved
+   * @param {Function} onCancel - Callback when cancelled
+   * @returns {HTMLElement} Form element
+   */
+  function createEditForm(search, onSave, onCancel) {
+    const form = document.createElement('div');
+    form.className = 'wizmail-edit-form';
+
+    const nameGroup = document.createElement('div');
+    nameGroup.className = 'wizmail-form-group';
+
+    const nameLabel = document.createElement('label');
+    nameLabel.className = 'wizmail-form-label';
+    nameLabel.textContent = 'Search Name';
+
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.className = 'wizmail-form-input';
+    nameInput.value = search.name;
+    nameInput.maxLength = MAX_NAME_LENGTH;
+
+    nameGroup.appendChild(nameLabel);
+    nameGroup.appendChild(nameInput);
+
+    const queryGroup = document.createElement('div');
+    queryGroup.className = 'wizmail-form-group';
+
+    const queryLabel = document.createElement('label');
+    queryLabel.className = 'wizmail-form-label';
+    queryLabel.textContent = 'Gmail Query';
+
+    const queryInput = document.createElement('input');
+    queryInput.type = 'text';
+    queryInput.className = 'wizmail-form-input';
+    queryInput.value = search.q;
+    queryInput.maxLength = MAX_QUERY_LENGTH;
+
+    queryGroup.appendChild(queryLabel);
+    queryGroup.appendChild(queryInput);
+
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'wizmail-form-error';
+
+    const buttons = document.createElement('div');
+    buttons.className = 'wizmail-form-buttons';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'wizmail-form-btn';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', () => {
+      onCancel();
+    });
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'wizmail-form-btn wizmail-form-btn-primary';
+    saveBtn.textContent = 'Save';
+    saveBtn.addEventListener('click', () => {
+      const name = nameInput.value.trim();
+      const q = queryInput.value.trim();
+
+      if (!validateString(name, MAX_NAME_LENGTH, 'name')) {
+        errorDiv.textContent = 'Invalid search name (1-100 characters)';
+        errorDiv.style.display = 'block';
+        return;
+      }
+
+      if (!validateString(q, MAX_QUERY_LENGTH, 'query')) {
+        errorDiv.textContent = 'Invalid query (1-500 characters)';
+        errorDiv.style.display = 'block';
+        return;
+      }
+
+      errorDiv.style.display = 'none';
+      onSave({ name, q });
+    });
+
+    buttons.appendChild(cancelBtn);
+    buttons.appendChild(saveBtn);
+
+    form.appendChild(nameGroup);
+    form.appendChild(queryGroup);
+    form.appendChild(errorDiv);
+    form.appendChild(buttons);
+
+    return form;
+  }
+
+  /**
+   * Creates the panel header with title and add button
    * All text set via textContent to prevent XSS
-   * @param {Function} onExport - Export button click handler
-   * @param {Function} onImport - Import button click handler
+   * @param {Function} onAdd - Add button click handler
    * @returns {HTMLElement} Header container
    */
-  function createPanelHeader(onExport, onImport) {
+  function createPanelHeader(onAdd) {
     const header = document.createElement('div');
     header.className = 'wizmail-header';
 
@@ -517,32 +745,17 @@
     // SECURITY: Use textContent to prevent XSS
     title.textContent = 'Saved Searches';
 
-    const buttonsContainer = document.createElement('div');
-    buttonsContainer.className = 'wizmail-buttons';
-
-    const exportBtn = document.createElement('button');
-    exportBtn.className = 'wizmail-btn';
+    const addBtn = document.createElement('button');
+    addBtn.className = 'wizmail-add-btn';
     // SECURITY: Use textContent to prevent XSS
-    exportBtn.textContent = 'Export';
-    exportBtn.addEventListener('click', (e) => {
+    addBtn.textContent = '+ Add';
+    addBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      onExport();
+      onAdd();
     });
-
-    const importBtn = document.createElement('button');
-    importBtn.className = 'wizmail-btn';
-    // SECURITY: Use textContent to prevent XSS
-    importBtn.textContent = 'Import';
-    importBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      onImport();
-    });
-
-    buttonsContainer.appendChild(exportBtn);
-    buttonsContainer.appendChild(importBtn);
 
     header.appendChild(title);
-    header.appendChild(buttonsContainer);
+    header.appendChild(addBtn);
 
     return header;
   }
@@ -572,211 +785,6 @@
     } else {
       window.location.hash = targetHash;
     }
-  }
-
-  // ============================================================================
-  // MODAL FUNCTIONS
-  // ============================================================================
-
-  /**
-   * Closes and removes a modal from shadow DOM
-   * @param {HTMLElement} modalElement - Modal to close
-   * @param {ShadowRoot} shadowRoot - Shadow root containing modal
-   */
-  function closeModal(modalElement, shadowRoot) {
-    if (modalElement && shadowRoot.contains(modalElement)) {
-      shadowRoot.removeChild(modalElement);
-    }
-  }
-
-  /**
-   * Shows export modal with current searches as JSON
-   * Readonly textarea prevents accidental edits
-   * @param {ShadowRoot} shadowRoot - Shadow root to append modal to
-   */
-  async function showExportModal(shadowRoot) {
-    const searches = await loadSearchesFromStorage();
-    const jsonString = JSON.stringify(searches, null, 2);
-
-    const overlay = document.createElement('div');
-    overlay.className = 'wizmail-modal-overlay';
-
-    const dialog = document.createElement('div');
-    dialog.className = 'wizmail-modal-dialog';
-
-    const title = document.createElement('h3');
-    title.className = 'wizmail-modal-title';
-    title.textContent = 'Export Saved Searches';
-
-    const text = document.createElement('p');
-    text.className = 'wizmail-modal-text';
-    text.textContent = 'Copy the JSON below to back up your saved searches:';
-
-    const textarea = document.createElement('textarea');
-    textarea.className = 'wizmail-modal-textarea';
-    textarea.value = jsonString;
-    textarea.readOnly = true;
-    textarea.rows = 15;
-
-    const buttonsContainer = document.createElement('div');
-    buttonsContainer.className = 'wizmail-modal-buttons';
-
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'wizmail-modal-btn wizmail-modal-btn-primary';
-    closeBtn.textContent = 'Close';
-    closeBtn.addEventListener('click', () => {
-      closeModal(overlay, shadowRoot);
-    });
-
-    buttonsContainer.appendChild(closeBtn);
-
-    dialog.appendChild(title);
-    dialog.appendChild(text);
-    dialog.appendChild(textarea);
-    dialog.appendChild(buttonsContainer);
-
-    overlay.appendChild(dialog);
-
-    // Click outside to close
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) {
-        closeModal(overlay, shadowRoot);
-      }
-    });
-
-    // ESC key to close
-    const escHandler = (e) => {
-      if (e.key === 'Escape') {
-        closeModal(overlay, shadowRoot);
-        document.removeEventListener('keydown', escHandler);
-      }
-    };
-    document.addEventListener('keydown', escHandler);
-
-    shadowRoot.appendChild(overlay);
-  }
-
-  /**
-   * Shows validation error in modal
-   * @param {HTMLElement} errorElement - Error display element
-   * @param {string} message - Error message to display
-   */
-  function showValidationError(errorElement, message) {
-    errorElement.textContent = message;
-    errorElement.style.color = '#d93025';
-    errorElement.style.display = 'block';
-  }
-
-  /**
-   * Shows import modal for pasting JSON configuration
-   * Multiple validation layers prevent injection
-   * @param {ShadowRoot} shadowRoot - Shadow root to append modal to
-   * @param {Function} onImportSuccess - Callback on successful import
-   */
-  async function showImportModal(shadowRoot, onImportSuccess) {
-    const overlay = document.createElement('div');
-    overlay.className = 'wizmail-modal-overlay';
-
-    const dialog = document.createElement('div');
-    dialog.className = 'wizmail-modal-dialog';
-
-    const title = document.createElement('h3');
-    title.className = 'wizmail-modal-title';
-    title.textContent = 'Import Saved Searches';
-
-    const text = document.createElement('p');
-    text.className = 'wizmail-modal-text';
-    text.textContent = 'Paste your exported JSON below to restore saved searches:';
-
-    const textarea = document.createElement('textarea');
-    textarea.className = 'wizmail-modal-textarea';
-    textarea.placeholder = 'Paste JSON here...';
-    textarea.rows = 15;
-
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'wizmail-modal-error';
-
-    const buttonsContainer = document.createElement('div');
-    buttonsContainer.className = 'wizmail-modal-buttons';
-
-    const cancelBtn = document.createElement('button');
-    cancelBtn.className = 'wizmail-modal-btn';
-    cancelBtn.textContent = 'Cancel';
-    cancelBtn.addEventListener('click', () => {
-      closeModal(overlay, shadowRoot);
-    });
-
-    const importBtn = document.createElement('button');
-    importBtn.className = 'wizmail-modal-btn wizmail-modal-btn-primary';
-    importBtn.textContent = 'Import';
-    importBtn.addEventListener('click', async () => {
-      const value = textarea.value;
-
-      if (!value || value.trim().length === 0) {
-        showValidationError(errorDiv, 'Please paste JSON to import');
-        return;
-      }
-
-      // SECURITY: Check for dangerous patterns
-      if (containsDangerousPatterns(value)) {
-        showValidationError(errorDiv, 'Import rejected: invalid format');
-        return;
-      }
-
-      let parsed;
-      try {
-        parsed = JSON.parse(value);
-      } catch (e) {
-        showValidationError(errorDiv, 'Invalid JSON format');
-        return;
-      }
-
-      // SECURITY: Validate structure
-      if (!validateSearchesArray(parsed)) {
-        showValidationError(errorDiv, 'Invalid search configuration');
-        return;
-      }
-
-      const saved = await saveSearchesToStorage(parsed);
-      if (!saved) {
-        showValidationError(errorDiv, 'Could not save settings');
-        return;
-      }
-
-      closeModal(overlay, shadowRoot);
-      if (onImportSuccess) {
-        onImportSuccess();
-      }
-    });
-
-    buttonsContainer.appendChild(cancelBtn);
-    buttonsContainer.appendChild(importBtn);
-
-    dialog.appendChild(title);
-    dialog.appendChild(text);
-    dialog.appendChild(textarea);
-    dialog.appendChild(errorDiv);
-    dialog.appendChild(buttonsContainer);
-
-    overlay.appendChild(dialog);
-
-    // Click outside to close
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) {
-        closeModal(overlay, shadowRoot);
-      }
-    });
-
-    // ESC key to close
-    const escHandler = (e) => {
-      if (e.key === 'Escape') {
-        closeModal(overlay, shadowRoot);
-        document.removeEventListener('keydown', escHandler);
-      }
-    };
-    document.addEventListener('keydown', escHandler);
-
-    shadowRoot.appendChild(overlay);
   }
 
   // ============================================================================
@@ -866,16 +874,190 @@
   // PANEL RENDERING
   // ============================================================================
 
+  let currentShadowRoot = null;
+  let currentSearches = [];
+
   /**
-   * Handles successful import by re-rendering panel
+   * Re-renders the search list in the existing panel
    */
-  function handleImportSuccess() {
-    console.log('[WizMail] Import successful, re-rendering panel');
-    const existingHost = document.getElementById('wizmail-saved-searches-host');
-    if (existingHost) {
-      existingHost.remove();
+  async function rerenderSearchList() {
+    if (!currentShadowRoot) {
+      return;
     }
-    renderPanel();
+
+    currentSearches = await loadSearchesFromStorage();
+
+    const existingList = currentShadowRoot.querySelector('.wizmail-list');
+    const existingForm = currentShadowRoot.querySelector('.wizmail-add-form, .wizmail-edit-form');
+
+    if (existingList) {
+      existingList.remove();
+    }
+    if (existingForm) {
+      existingForm.remove();
+    }
+
+    const container = currentShadowRoot.querySelector('.wizmail-container');
+    if (!container) {
+      return;
+    }
+
+    const searchList = createSearchList(
+      currentSearches,
+      handleSearchClick,
+      handleEdit,
+      handleDelete
+    );
+
+    container.appendChild(searchList);
+  }
+
+  /**
+   * Shows the add search form
+   */
+  function showAddForm() {
+    if (!currentShadowRoot) {
+      return;
+    }
+
+    const existingForm = currentShadowRoot.querySelector('.wizmail-add-form, .wizmail-edit-form');
+    if (existingForm) {
+      return; // Already showing a form
+    }
+
+    if (currentSearches.length >= MAX_SEARCHES) {
+      alert(`Maximum ${MAX_SEARCHES} searches allowed`);
+      return;
+    }
+
+    const container = currentShadowRoot.querySelector('.wizmail-container');
+    const header = currentShadowRoot.querySelector('.wizmail-header');
+
+    const form = createAddForm(
+      async (search) => {
+        currentSearches.push(search);
+        const saved = await saveSearchesToStorage(currentSearches);
+        if (saved) {
+          await rerenderSearchList();
+        }
+      },
+      () => {
+        const form = currentShadowRoot.querySelector('.wizmail-add-form');
+        if (form) {
+          form.remove();
+        }
+      }
+    );
+
+    // Insert after header
+    if (header.nextSibling) {
+      container.insertBefore(form, header.nextSibling);
+    } else {
+      container.appendChild(form);
+    }
+  }
+
+  /**
+   * Handles editing a search
+   * @param {number} index - Index of search to edit
+   */
+  function handleEdit(index) {
+    if (!currentShadowRoot || index < 0 || index >= currentSearches.length) {
+      return;
+    }
+
+    const existingForm = currentShadowRoot.querySelector('.wizmail-add-form, .wizmail-edit-form');
+    if (existingForm) {
+      existingForm.remove();
+    }
+
+    const search = currentSearches[index];
+    const list = currentShadowRoot.querySelector('.wizmail-list');
+    const listItems = list.querySelectorAll('.wizmail-item');
+    const targetItem = listItems[index];
+
+    if (!targetItem) {
+      return;
+    }
+
+    const form = createEditForm(
+      search,
+      async (updatedSearch) => {
+        currentSearches[index] = updatedSearch;
+        const saved = await saveSearchesToStorage(currentSearches);
+        if (saved) {
+          await rerenderSearchList();
+        }
+      },
+      () => {
+        const form = currentShadowRoot.querySelector('.wizmail-edit-form');
+        if (form) {
+          form.remove();
+        }
+      }
+    );
+
+    // Insert after the item being edited
+    if (targetItem.nextSibling) {
+      list.insertBefore(form, targetItem.nextSibling);
+    } else {
+      list.appendChild(form);
+    }
+  }
+
+  /**
+   * Handles deleting a search
+   * @param {number} index - Index of search to delete
+   */
+  async function handleDelete(index) {
+    if (index < 0 || index >= currentSearches.length) {
+      return;
+    }
+
+    const search = currentSearches[index];
+    const confirmed = confirm(`Delete "${search.name}"?`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    currentSearches.splice(index, 1);
+
+    // If all searches deleted, restore defaults
+    if (currentSearches.length === 0) {
+      currentSearches = DEFAULT_SEARCHES.slice();
+    }
+
+    const saved = await saveSearchesToStorage(currentSearches);
+    if (saved) {
+      await rerenderSearchList();
+    }
+  }
+
+  /**
+   * Creates the search list container
+   * @param {Array} searches - Array of search objects
+   * @param {Function} onSearchClick - Click handler for searches
+   * @param {Function} onEdit - Edit handler
+   * @param {Function} onDelete - Delete handler
+   * @returns {HTMLElement} Unordered list element
+   */
+  function createSearchList(searches, onSearchClick, onEdit, onDelete) {
+    const ul = document.createElement('ul');
+    ul.className = 'wizmail-list';
+
+    if (!Array.isArray(searches) || searches.length === 0) {
+      return ul;
+    }
+
+    for (let i = 0; i < searches.length; i++) {
+      const item = createSearchItem(searches[i], onSearchClick, onEdit, onDelete, i);
+      if (item !== null) {
+        ul.appendChild(item);
+      }
+    }
+
+    return ul;
   }
 
   /**
@@ -888,10 +1070,11 @@
       return;
     }
 
-    const searches = await loadSearchesFromStorage();
+    currentSearches = await loadSearchesFromStorage();
 
     const hostElement = createShadowHost();
     const shadowRoot = attachShadowRoot(hostElement);
+    currentShadowRoot = shadowRoot;
 
     const styles = createShadowStyles();
     shadowRoot.appendChild(styles);
@@ -899,13 +1082,15 @@
     const container = document.createElement('div');
     container.className = 'wizmail-container';
 
-    const header = createPanelHeader(
-      () => showExportModal(shadowRoot),
-      () => showImportModal(shadowRoot, handleImportSuccess)
-    );
+    const header = createPanelHeader(showAddForm);
     container.appendChild(header);
 
-    const searchList = createSearchList(searches, handleSearchClick);
+    const searchList = createSearchList(
+      currentSearches,
+      handleSearchClick,
+      handleEdit,
+      handleDelete
+    );
     container.appendChild(searchList);
 
     shadowRoot.appendChild(container);
