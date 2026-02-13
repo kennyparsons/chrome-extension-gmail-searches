@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WizMail - Manage Searches</title>
+  <link rel="stylesheet" href="manage.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 class="title">Manage Saved Searches</h1>
+    </div>
+
+    <div class="content">
+      <div class="toolbar">
+        <button id="addNewBtn" class="btn btn-primary">+ Add New Search</button>
+        <button id="resetBtn" class="btn btn-secondary">Reset to Defaults</button>
+      </div>
+
+      <div id="searchList" class="manage-list">
+        <!-- Searches will be populated here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div id="modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle" class="modal-title">Add Search</h2>
+        <button id="modalClose" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="searchName" class="form-label">Search Name</label>
+          <input type="text" id="searchName" class="form-input" placeholder="e.g., Unread" maxlength="100">
+        </div>
+        <div class="form-group">
+          <label for="searchQuery" class="form-label">Gmail Query</label>
+          <input type="text" id="searchQuery" class="form-input" placeholder="e.g., is:unread" maxlength="500">
+        </div>
+        <div id="modalError" class="error-message" style="display: none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="modalCancel" class="btn btn-secondary">Cancel</button>
+        <button id="modalSave" class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="manage.js"></script>
+</body>
+</html>
