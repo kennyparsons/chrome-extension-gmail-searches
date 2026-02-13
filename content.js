@@ -797,18 +797,41 @@
    * @returns {HTMLElement|null} Navigation container or null
    */
   function findGmailNavigationContainer() {
-    // Gmail SPA has dynamic structure, try multiple selectors
-    let navContainer = document.querySelector('[role="navigation"]');
-    if (navContainer) {
-      return navContainer;
+    // Try multiple selectors for Gmail's left sidebar navigation
+    const selectors = [
+      '[role="navigation"]',
+      '.aeN',
+      '.aim',
+      'nav',
+      '[jsname]', // Gmail uses jsname attributes
+      '.aio', // Gmail sidebar class
+      '.wT', // Another Gmail nav class
+      '[gh="nav"]', // Gmail data attribute
+    ];
+
+    for (let i = 0; i < selectors.length; i++) {
+      const navContainer = document.querySelector(selectors[i]);
+      if (navContainer) {
+        console.log('[WizMail] Found navigation using selector:', selectors[i]);
+        return navContainer;
+      }
     }
 
-    // Fallback: look for common Gmail nav structure
-    navContainer = document.querySelector('.aeN');
-    if (navContainer) {
-      return navContainer;
+    // Last resort: find any element that looks like the left sidebar
+    const allDivs = document.querySelectorAll('div');
+    for (let i = 0; i < allDivs.length; i++) {
+      const div = allDivs[i];
+      // Look for elements that contain "Inbox", "Starred", etc
+      if (div.textContent &&
+          div.textContent.includes('Inbox') &&
+          div.textContent.includes('Starred') &&
+          div.children.length > 5) {
+        console.log('[WizMail] Found navigation via content search');
+        return div;
+      }
     }
 
+    console.error('[WizMail] Could not find navigation with any selector');
     return null;
   }
 
@@ -818,13 +841,28 @@
    * @returns {HTMLElement|null} Labels section element or null
    */
   function findLabelsSection() {
+    // Try to find by text content
     const allElements = document.querySelectorAll('*');
     for (let i = 0; i < allElements.length; i++) {
       const el = allElements[i];
-      if (el.textContent && el.textContent.trim() === 'Labels') {
+      const text = el.textContent ? el.textContent.trim() : '';
+      if (text === 'Labels' || text === 'Categories') {
+        console.log('[WizMail] Found Labels/Categories section');
         return el;
       }
     }
+
+    // Fallback: find by looking for common label area
+    const spans = document.querySelectorAll('span');
+    for (let i = 0; i < spans.length; i++) {
+      const span = spans[i];
+      const text = span.textContent ? span.textContent.trim() : '';
+      if (text === 'Labels') {
+        console.log('[WizMail] Found Labels via span search');
+        return span;
+      }
+    }
+
     return null;
   }
 
@@ -1166,10 +1204,28 @@
         });
       }
 
-      await renderPanel();
-      setupMutationObserver();
+      // Gmail SPA needs extra time to render navigation
+      // Try multiple times with delays
+      let attempts = 0;
+      const maxAttempts = 10;
+      const delay = 500; // ms
 
-      console.log('[WizMail] Initialization complete');
+      while (attempts < maxAttempts) {
+        const navContainer = findGmailNavigationContainer();
+        if (navContainer) {
+          console.log(`[WizMail] Navigation found on attempt ${attempts + 1}`);
+          await renderPanel();
+          setupMutationObserver();
+          console.log('[WizMail] Initialization complete');
+          return;
+        }
+
+        console.log(`[WizMail] Navigation not found, attempt ${attempts + 1}/${maxAttempts}, waiting...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        attempts++;
+      }
+
+      console.error('[WizMail] Failed to find Gmail navigation after', maxAttempts, 'attempts');
     } catch (error) {
       console.error('[WizMail] Initialization error:', error);
     }
