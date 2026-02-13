@@ -1,23 +1,32 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <!-- Sharp color transitions (no blending) - diagonal along S path -->
+    <linearGradient id="sharpGradient" x1="100%" y1="0%" x2="0%" y2="100%">
+      <!-- Blue section -->
+      <stop offset="0%" style="stop-color:#1a73e8;stop-opacity:1" />
+      <stop offset="25%" style="stop-color:#1a73e8;stop-opacity:1" />
+      <!-- Sharp transition to Red -->
+      <stop offset="25%" style="stop-color:#d93025;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#d93025;stop-opacity:1" />
+      <!-- Sharp transition to Yellow -->
+      <stop offset="50%" style="stop-color:#f9ab00;stop-opacity:1" />
+      <stop offset="75%" style="stop-color:#f9ab00;stop-opacity:1" />
+      <!-- Sharp transition to Green -->
+      <stop offset="75%" style="stop-color:#188038;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#188038;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
   <!-- Background with rounded corners -->
   <rect width="128" height="128" fill="#ffffff" rx="24"/>
 
-  <!-- S broken into 4 distinct colored segments snaking along the path -->
-  <g>
-    <!-- Segment 1: Top right curve - BLUE -->
-    <path d="M 80,35 C 88,35 95,42 95,50 C 95,56 91,61 85,63 L 70,63 L 70,50 L 82,50 C 83,50 84,49 84,48 C 84,45 82,43 80,43 L 48,43 C 45,43 43,45 43,48 C 43,50 44,51 46,52 L 55,52 L 55,63 L 43,63"
-          fill="#1a73e8"/>
-
-    <!-- Segment 2: Middle left curve - RED -->
-    <path d="M 43,63 C 36,63 30,69 30,76 C 30,81 33,85 37,87 L 58,87 L 58,76 L 43,76 C 41,76 40,75 40,74 C 40,72 41,71 43,71 L 75,71"
-          fill="#d93025"/>
-
-    <!-- Segment 3: Middle right curve - YELLOW -->
-    <path d="M 75,71 C 82,71 88,77 88,84 C 88,89 85,93 81,95 L 70,95 L 70,84 L 78,84 C 79,84 80,83 80,82 C 80,80 79,79 77,79 L 45,79"
-          fill="#f9ab00"/>
-
-    <!-- Segment 4: Bottom left curve - GREEN -->
-    <path d="M 45,79 C 38,79 32,85 32,92 C 32,99 38,105 45,105 L 77,105 C 84,105 90,99 90,92 C 90,89 88,86 85,84 L 77,84 L 77,95 L 45,95 C 42,95 40,93 40,91 C 40,89 42,87 45,87 L 58,87 L 58,79 L 45,79"
-          fill="#188038"/>
-  </g>
+  <!-- Bold S with sharp color segments -->
+  <text
+    x="64"
+    y="96"
+    font-family="'Google Sans', 'Product Sans', Arial, sans-serif"
+    font-size="90"
+    font-weight="700"
+    fill="url(#sharpGradient)"
+    text-anchor="middle">S</text>
 </svg>
