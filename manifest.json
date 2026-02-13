@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "WizMail",
+  "version": "1.0.0",
+  "description": "Gmail productivity enhancement - adds a customizable Saved Searches panel to Gmail's left navigation",
+  "permissions": ["storage"],
+  "host_permissions": ["https://mail.google.com/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'"
+  }
+}
