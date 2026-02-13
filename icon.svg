@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <!-- Google multicolor gradient: Blue -> Red -> Yellow -> Green -->
+    <linearGradient id="googleGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a73e8;stop-opacity:1" />
+      <stop offset="35%" style="stop-color:#d93025;stop-opacity:1" />
+      <stop offset="65%" style="stop-color:#f9ab00;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#188038;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background with rounded corners -->
+  <rect width="128" height="128" fill="#ffffff" rx="24"/>
+
+  <!-- Bold letter S with Google colors -->
+  <text
+    x="64"
+    y="96"
+    font-family="'Google Sans', 'Product Sans', Arial, sans-serif"
+    font-size="92"
+    font-weight="700"
+    fill="url(#googleGradient)"
+    text-anchor="middle">S</text>
+</svg>
