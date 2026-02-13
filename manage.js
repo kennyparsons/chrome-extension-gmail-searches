@@ -1,5 +1,5 @@
 /**
- * WizMail Manage Page
+ * Gmail Quick Search - Manage Page
  * Add, edit, delete saved searches
  */
 
@@ -169,7 +169,7 @@ async function loadSearches() {
 
     return searches;
   } catch (error) {
-    console.error('[WizMail Manage] Error loading searches:', error);
+    console.error('[Gmail Quick Search] Error loading searches:', error);
     return DEFAULT_SEARCHES.slice();
   }
 }
@@ -182,7 +182,7 @@ async function saveSearches(searches) {
     await chrome.storage.local.set({ [STORAGE_KEY]: searches });
     return true;
   } catch (error) {
-    console.error('[WizMail Manage] Error saving searches:', error);
+    console.error('[Gmail Quick Search] Error saving searches:', error);
     return false;
   }
 }

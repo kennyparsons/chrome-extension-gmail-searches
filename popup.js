@@ -1,6 +1,6 @@
 /**
- * WizMail Popup
- * Displays saved searches and handles navigation
+ * Gmail Quick Search - Popup
+ * Displays saved searches and handles navigation to Gmail
  */
 
 'use strict';
@@ -32,7 +32,7 @@ async function loadSearches() {
 
     return searches;
   } catch (error) {
-    console.error('[WizMail Popup] Error loading searches:', error);
+    console.error('[Gmail Quick Search] Error loading searches:', error);
     return DEFAULT_SEARCHES;
   }
 }
@@ -66,7 +66,7 @@ async function navigateToSearch(query) {
     // Close popup
     window.close();
   } catch (error) {
-    console.error('[WizMail Popup] Error navigating:', error);
+    console.error('[Gmail Quick Search] Error navigating:', error);
   }
 }
 
