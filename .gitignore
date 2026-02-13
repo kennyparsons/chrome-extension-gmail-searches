@@ -1,0 +1,20 @@
+# Project artifacts
+artifacts/
+
+# Claude configuration
+CLAUDE.md
+.claude/
+
+# Repository mapping
+repomap/
+.repomap.tags.cache.v1/
+
+# macOS
+.DS_Store
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
