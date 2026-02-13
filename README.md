@@ -1,155 +1,84 @@
-# WizMail - Gmail Saved Searches Extension
+# 📧 Gmail Quick Search
 
-A security-first Chrome extension that adds a customizable Saved Searches panel to Gmail's left navigation.
+Quick access to your saved Gmail searches. Click any search to jump directly to filtered results.
 
-## Overview
+## ✨ Features
 
-WizMail replaces Tampermonkey userscripts with a minimal, auditable Chrome extension designed for enterprise environments. It operates exclusively on Gmail with no external network access, no remote code execution, and no email data collection.
+- 🎯 **Quick Access** - One-click access to your most-used Gmail searches
+- 🎨 **Gmail-Themed UI** - Dark theme matching Gmail's official colors
+- 🔒 **Security-First** - Input validation and XSS prevention built-in
+- ⚡ **Fast & Lightweight** - Minimal permissions, maximum performance
+- 💾 **Local Storage** - Your searches stay private on your device
+- ✏️ **Easy Management** - Add, edit, and delete searches with real-time validation
 
-## Features
+## 🚀 Installation
 
-- **Saved Searches Panel**: Quick access to frequently used Gmail searches
-- **8 Default Searches**: Pre-configured productivity searches (Unread, Needs Reply, etc.)
-- **Import/Export**: Backup and restore your search configurations
-- **Shadow DOM Isolation**: Styles isolated from Gmail to prevent conflicts
-- **Auto-Recovery**: Survives Gmail re-renders using mutation observers
+### Load as Unpacked Extension
 
-## Security
+1. **Download or Clone** this repository
+   ```bash
+   git clone https://github.com/kennyparsons/chrome-extension-gmail-searches.git
+   ```
 
-- **Minimal Permissions**: Only requires `storage` permission
-- **Domain Restricted**: Runs only on `https://mail.google.com/*`
-- **No Network Requests**: Entirely client-side with no external calls
-- **No Remote Code**: All logic bundled locally
-- **XSS Protection**: All user data rendered via textContent
-- **Input Validation**: Comprehensive validation on all imported data
-- **Content Security Policy**: Strict CSP prevents code injection
+2. **Open Chrome Extensions Page**
+   - Navigate to `chrome://extensions/`
+   - Or click Menu → Extensions → Manage Extensions
 
-## Installation
+3. **Enable Developer Mode**
+   - Toggle the "Developer mode" switch in the top-right corner
 
-### Loading Unpacked Extension (Development)
+4. **Load the Extension**
+   - Click "Load unpacked"
+   - Select the folder containing this repository
 
-1. Clone or download this repository
-2. Open Chrome and navigate to `chrome://extensions/`
-3. Enable **Developer mode** (toggle in top-right corner)
-4. Click **Load unpacked**
-5. Select the `wizmail` directory
-6. Navigate to Gmail - the Saved Searches panel should appear in the left sidebar
+5. **Pin the Extension** (optional)
+   - Click the Extensions puzzle icon in your toolbar
+   - Pin "Gmail Quick Search" for easy access
 
-### For IT Deployment
+## 📖 Usage
 
-1. Review the security documentation in `SECURITY.md`
-2. Audit the source code (manifest.json and content.js)
-3. Package the extension using Chrome's packaging tools
-4. Deploy via enterprise policy or Chrome Web Store
+### Quick Search
+1. Click the Gmail Quick Search icon in your toolbar
+2. Select any saved search from the popup
+3. You'll be taken directly to Gmail with that search applied
 
-## Usage
+### Manage Searches
+1. Click the ⚙️ gear icon in the popup
+2. **Add** new searches with custom names and Gmail queries
+3. **Edit** existing searches
+4. **Delete** searches you no longer need
+5. **Reset** to default searches anytime
 
-### Using Saved Searches
+### Default Searches
+The extension comes with 8 useful default searches:
+- 📬 Unread
+- 📦 Unread Archived
+- ✉️ Needs Reply
+- 🗂️ Should Archive
+- 📎 Attachments
+- 🧾 Receipts
+- ⭐ Starred
+- 📅 Calendar
 
-- Click any search in the panel to navigate to that Gmail search
-- Searches use Gmail's native hash routing (no APIs required)
-- Panel survives page navigation and Gmail re-renders
+## 🔐 Security Features
 
-### Exporting Searches
+- **XSS Prevention** - All user input is sanitized
+- **Pattern Detection** - Blocks dangerous scripts and code injection
+- **Gmail Query Validation** - Ensures queries are valid Gmail search syntax
+- **Character Limits** - Prevents abuse and oversized data
+- **Duplicate Detection** - Warns before creating duplicate searches
 
-1. Click the **Export** button in the panel header
-2. Copy the JSON from the modal
-3. Save to a file or password manager for backup
+## 🛠️ Technical Details
 
-### Importing Searches
+- **Manifest Version:** 3
+- **Permissions:** `storage`, `tabs`
+- **Host Permissions:** `https://mail.google.com/*`
+- **Storage:** Local only (chrome.storage.local)
 
-1. Click the **Import** button in the panel header
-2. Paste valid JSON configuration
-3. Click **Import** to apply changes
-4. Panel will re-render with new searches
+## 📝 License
 
-### Import Format
+This project is open source and available under the MIT License.
 
-```json
-[
-  {
-    "name": "Search Name",
-    "q": "Gmail search query"
-  }
-]
-```
+## 🌟 Coming Soon
 
-**Validation Rules:**
-- Maximum 50 searches
-- Search names ≤ 100 characters
-- Search queries ≤ 500 characters
-- No HTML, scripts, or code injection patterns
-
-## Default Searches
-
-1. **Unread**: All unread messages
-2. **Unread Archived**: Unread messages not in inbox
-3. **Needs Reply**: Unread unlabeled messages requiring action
-4. **Should Archive**: Read inbox messages that aren't starred
-5. **Attachments**: All messages with attachments
-6. **Receipts**: Purchases and receipts from the last year
-7. **Starred**: All starred messages
-8. **Calendar**: Calendar invitations and updates
-
-## Troubleshooting
-
-### Panel doesn't appear
-- Verify you're on `mail.google.com`
-- Check Chrome extensions page - ensure WizMail is enabled
-- Open DevTools console and look for `[WizMail]` logs
-- Try reloading Gmail
-
-### Panel disappears after navigation
-- This shouldn't happen - mutation observer should restore it
-- Check console for errors
-- Report issue if persistent
-
-### Import fails
-- Verify JSON is valid (use a JSON validator)
-- Check that array length ≤ 50 items
-- Ensure no HTML or script tags in search names/queries
-- Check string length limits
-
-## Development
-
-### Project Structure
-
-```
-wizmail/
-├── manifest.json    # Extension manifest (Manifest v3)
-├── content.js       # Main content script
-├── README.md        # This file
-├── SECURITY.md      # Security documentation
-└── CHANGELOG.md     # Version history
-```
-
-### Code Architecture
-
-- **IIFE Wrapper**: All code in strict mode IIFE
-- **No Global Variables**: Prevents conflicts with Gmail
-- **Validation First**: All user input validated before use
-- **Shadow DOM**: Complete style isolation
-- **Event Delegation**: Efficient event handling
-- **Debouncing**: Prevents excessive re-renders
-
-### Contributing
-
-This is an internal enterprise extension. For changes:
-
-1. Create feature branch from main
-2. Make minimal, focused changes
-3. Test thoroughly on Gmail
-4. Run security validation checklist
-5. Submit for security review
-6. Update CHANGELOG.md
-
-## License
-
-Internal use only. Not for public distribution.
-
-## Support
-
-For issues or questions:
-- Check SECURITY.md for security-related questions
-- Review Chrome DevTools console for error messages
-- Contact IT security team for deployment issues
+This extension will be available on the Chrome Web Store. Stay tuned!

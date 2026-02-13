@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to WizMail will be documented in this file.
+All notable changes to Gmail Saved Searches will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -75,7 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Content Script Run Time**: document_idle
 - **Shadow DOM Mode**: open (allows IT inspection)
 - **Storage**: chrome.storage.local
-- **Storage Key**: wizmail-saved-searches-v1
+- **Storage Key**: gmail-saved-searches-v1
 
 ### Known Limitations
 

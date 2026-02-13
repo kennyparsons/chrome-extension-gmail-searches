@@ -5,7 +5,7 @@
 
 'use strict';
 
-const STORAGE_KEY = 'wizmail-saved-searches-v1';
+const STORAGE_KEY = 'gmail-saved-searches-v1';
 
 const DEFAULT_SEARCHES = [
   { name: "Unread", q: "is:unread" },
