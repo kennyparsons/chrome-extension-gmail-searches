@@ -97,17 +97,14 @@ function renderSearchList(searches) {
     // Security: use textContent
     name.textContent = search.name;
 
-    const query = document.createElement('div');
-    query.className = 'search-item-query';
-    // Security: use textContent
-    query.textContent = search.q;
-
     item.appendChild(name);
-    item.appendChild(query);
 
     item.addEventListener('click', () => {
       navigateToSearch(search.q);
     });
+
+    // Add tooltip showing the query on hover
+    item.title = search.q;
 
     listContainer.appendChild(item);
   });
