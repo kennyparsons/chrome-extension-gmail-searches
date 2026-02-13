@@ -792,75 +792,97 @@
   // ============================================================================
 
   /**
-   * Finds Gmail's navigation container
-   * Multiple selectors for Gmail UI resilience
-   * @returns {HTMLElement|null} Navigation container or null
+   * Finds the Inbox element in Gmail navigation
+   * @returns {HTMLElement|null} Inbox element or null
    */
-  function findGmailNavigationContainer() {
-    // Try multiple selectors for Gmail's left sidebar navigation
-    const selectors = [
-      '[role="navigation"]',
-      '.aeN',
-      '.aim',
-      'nav',
-      '[jsname]', // Gmail uses jsname attributes
-      '.aio', // Gmail sidebar class
-      '.wT', // Another Gmail nav class
-      '[gh="nav"]', // Gmail data attribute
-    ];
+  function findInboxElement() {
+    // Look for the Inbox link/element
+    const allLinks = document.querySelectorAll('a, div, span');
+    for (let i = 0; i < allLinks.length; i++) {
+      const el = allLinks[i];
+      const text = el.textContent ? el.textContent.trim() : '';
 
-    for (let i = 0; i < selectors.length; i++) {
-      const navContainer = document.querySelector(selectors[i]);
-      if (navContainer) {
-        console.log('[WizMail] Found navigation using selector:', selectors[i]);
-        return navContainer;
+      // Look for exact "Inbox" text with number or alone
+      if (text === 'Inbox' || text.match(/^Inbox\s*\d*$/)) {
+        // Make sure it's in the left sidebar (not too far right)
+        const rect = el.getBoundingClientRect();
+        if (rect.left < 300) {
+          console.log('[WizMail] Found Inbox element');
+          return el;
+        }
       }
     }
-
-    // Last resort: find any element that looks like the left sidebar
-    const allDivs = document.querySelectorAll('div');
-    for (let i = 0; i < allDivs.length; i++) {
-      const div = allDivs[i];
-      // Look for elements that contain "Inbox", "Starred", etc
-      if (div.textContent &&
-          div.textContent.includes('Inbox') &&
-          div.textContent.includes('Starred') &&
-          div.children.length > 5) {
-        console.log('[WizMail] Found navigation via content search');
-        return div;
-      }
-    }
-
-    console.error('[WizMail] Could not find navigation with any selector');
     return null;
   }
 
   /**
-   * Finds the Labels section in Gmail navigation
-   * Attempts to place panel below Labels for better UX
-   * @returns {HTMLElement|null} Labels section element or null
+   * Finds Gmail's navigation container (parent of Inbox)
+   * @returns {HTMLElement|null} Navigation container or null
    */
-  function findLabelsSection() {
-    // Try to find by text content
-    const allElements = document.querySelectorAll('*');
-    for (let i = 0; i < allElements.length; i++) {
-      const el = allElements[i];
-      const text = el.textContent ? el.textContent.trim() : '';
-      if (text === 'Labels' || text === 'Categories') {
-        console.log('[WizMail] Found Labels/Categories section');
-        return el;
+  function findGmailNavigationContainer() {
+    const inbox = findInboxElement();
+    if (inbox) {
+      // Navigate up to find the container that holds all nav items
+      let parent = inbox.parentElement;
+      let depth = 0;
+      while (parent && depth < 10) {
+        // Look for a parent that contains multiple navigation items
+        const text = parent.textContent || '';
+        if (text.includes('Inbox') &&
+            text.includes('Starred') &&
+            (text.includes('Snoozed') || text.includes('Sent'))) {
+          console.log('[WizMail] Found navigation container (depth:', depth, ')');
+          return parent;
+        }
+        parent = parent.parentElement;
+        depth++;
       }
     }
 
-    // Fallback: find by looking for common label area
-    const spans = document.querySelectorAll('span');
-    for (let i = 0; i < spans.length; i++) {
-      const span = spans[i];
-      const text = span.textContent ? span.textContent.trim() : '';
-      if (text === 'Labels') {
-        console.log('[WizMail] Found Labels via span search');
-        return span;
+    console.error('[WizMail] Could not find navigation container');
+    return null;
+  }
+
+  /**
+   * Finds an insertion point for the panel (before Inbox)
+   * @returns {Object|null} Object with {parent, before} or null
+   */
+  function findInsertionPoint() {
+    const inbox = findInboxElement();
+    if (!inbox) {
+      console.error('[WizMail] Cannot find Inbox element for insertion');
+      return null;
+    }
+
+    // Find the direct container of the inbox item
+    // We want to insert a sibling before it
+    let inboxContainer = inbox;
+    let depth = 0;
+
+    // Walk up until we find an element that looks like a nav item container
+    while (inboxContainer.parentElement && depth < 5) {
+      const parent = inboxContainer.parentElement;
+      // Check if parent seems to contain multiple nav items as siblings
+      const siblings = parent.children;
+      if (siblings.length > 3) {
+        // This looks like the right level
+        console.log('[WizMail] Found insertion point before Inbox');
+        return {
+          parent: parent,
+          before: inboxContainer
+        };
       }
+      inboxContainer = parent;
+      depth++;
+    }
+
+    // Fallback: insert before inbox's parent
+    if (inbox.parentElement) {
+      console.log('[WizMail] Using fallback insertion point');
+      return {
+        parent: inbox.parentElement.parentElement || inbox.parentElement,
+        before: inbox.parentElement
+      };
     }
 
     return null;
@@ -868,31 +890,20 @@
 
   /**
    * Inserts panel host element into Gmail DOM
+   * Inserts before Inbox (below Compose, above navigation)
    * @param {HTMLElement} hostElement - Host element to insert
    * @returns {boolean} True if inserted successfully
    */
   function insertPanelIntoDOM(hostElement) {
-    const labelsSection = findLabelsSection();
+    const insertionPoint = findInsertionPoint();
 
-    if (labelsSection) {
-      const parent = labelsSection.parentElement;
-      const nextSibling = labelsSection.nextSibling;
-
-      if (nextSibling) {
-        parent.insertBefore(hostElement, nextSibling);
-      } else {
-        parent.appendChild(hostElement);
-      }
+    if (insertionPoint) {
+      insertionPoint.parent.insertBefore(hostElement, insertionPoint.before);
+      console.log('[WizMail] Panel inserted before Inbox');
       return true;
     }
 
-    const navContainer = findGmailNavigationContainer();
-    if (navContainer) {
-      navContainer.appendChild(hostElement);
-      return true;
-    }
-
-    console.error('[WizMail] Gmail navigation not found, cannot insert panel');
+    console.error('[WizMail] Could not find insertion point');
     return false;
   }
 
@@ -1207,25 +1218,27 @@
       // Gmail SPA needs extra time to render navigation
       // Try multiple times with delays
       let attempts = 0;
-      const maxAttempts = 10;
+      const maxAttempts = 20;
       const delay = 500; // ms
 
       while (attempts < maxAttempts) {
-        const navContainer = findGmailNavigationContainer();
-        if (navContainer) {
-          console.log(`[WizMail] Navigation found on attempt ${attempts + 1}`);
+        const inbox = findInboxElement();
+        if (inbox) {
+          console.log(`[WizMail] Inbox found on attempt ${attempts + 1}`);
           await renderPanel();
           setupMutationObserver();
           console.log('[WizMail] Initialization complete');
           return;
         }
 
-        console.log(`[WizMail] Navigation not found, attempt ${attempts + 1}/${maxAttempts}, waiting...`);
+        if (attempts === 0 || attempts % 5 === 0) {
+          console.log(`[WizMail] Waiting for Gmail to load... (attempt ${attempts + 1}/${maxAttempts})`);
+        }
         await new Promise(resolve => setTimeout(resolve, delay));
         attempts++;
       }
 
-      console.error('[WizMail] Failed to find Gmail navigation after', maxAttempts, 'attempts');
+      console.error('[WizMail] Failed to find Gmail Inbox after', maxAttempts, 'attempts');
     } catch (error) {
       console.error('[WizMail] Initialization error:', error);
     }
