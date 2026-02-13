@@ -34,6 +34,128 @@ function validateString(value, maxLength) {
 }
 
 /**
+ * Detects dangerous patterns in input
+ * Security: Prevents code injection attempts
+ */
+function containsDangerousPatterns(value) {
+  const dangerous = [
+    /<script/i,
+    /<iframe/i,
+    /<embed/i,
+    /<object/i,
+    /javascript:/i,
+    /data:/i,
+    /vbscript:/i,
+    /on\w+\s*=/i, // Event handlers like onclick=
+    /<img[^>]+src/i,
+    /eval\(/i,
+    /expression\(/i,
+  ];
+
+  for (const pattern of dangerous) {
+    if (pattern.test(value)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Validates Gmail query syntax
+ * Basic validation to ensure it looks like a Gmail search
+ */
+function validateGmailQuery(query) {
+  // Empty queries not allowed
+  if (!query || query.trim().length === 0) {
+    return { valid: false, error: 'Query cannot be empty' };
+  }
+
+  // Check for dangerous patterns
+  if (containsDangerousPatterns(query)) {
+    return { valid: false, error: 'Query contains invalid characters or patterns' };
+  }
+
+  // Common Gmail operators (not exhaustive, just common ones)
+  const validOperators = [
+    'from:', 'to:', 'subject:', 'label:', 'has:', 'is:', 'in:',
+    'cc:', 'bcc:', 'after:', 'before:', 'older:', 'newer:',
+    'category:', 'size:', 'larger:', 'smaller:', 'filename:',
+    'has:attachment', 'has:drive', 'has:document', 'has:spreadsheet',
+    'has:presentation', 'has:youtube', 'has:nouserlabels',
+    'is:unread', 'is:read', 'is:starred', 'is:important', 'is:chat',
+  ];
+
+  // Allow basic text search and operators
+  // Just warn about suspicious patterns, don't block everything
+  const hasOperator = validOperators.some(op => query.toLowerCase().includes(op));
+  const hasText = /[a-zA-Z0-9]/.test(query);
+
+  if (!hasOperator && !hasText) {
+    return { valid: false, error: 'Query must contain text or valid Gmail operators' };
+  }
+
+  // Check for SQL injection patterns (paranoid check)
+  const sqlPatterns = [
+    /union\s+select/i,
+    /drop\s+table/i,
+    /insert\s+into/i,
+    /delete\s+from/i,
+    /update\s+\w+\s+set/i,
+    /--/,
+    /;.*drop/i,
+  ];
+
+  for (const pattern of sqlPatterns) {
+    if (pattern.test(query)) {
+      return { valid: false, error: 'Query contains invalid patterns' };
+    }
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Checks for duplicate searches
+ */
+function checkDuplicate(name, query, excludeIndex = null) {
+  for (let i = 0; i < currentSearches.length; i++) {
+    if (i === excludeIndex) continue;
+
+    const search = currentSearches[i];
+
+    // Exact name match
+    if (search.name.toLowerCase() === name.toLowerCase()) {
+      return { isDuplicate: true, type: 'name', message: `A search named "${search.name}" already exists` };
+    }
+
+    // Exact query match
+    if (search.q === query) {
+      return { isDuplicate: true, type: 'query', message: `This query already exists as "${search.name}"` };
+    }
+  }
+
+  return { isDuplicate: false };
+}
+
+/**
+ * Validates search name
+ */
+function validateSearchName(name) {
+  // Check for dangerous patterns
+  if (containsDangerousPatterns(name)) {
+    return { valid: false, error: 'Name contains invalid characters or patterns' };
+  }
+
+  // Check for suspicious characters
+  if (/<|>|{|}|\$|`/.test(name)) {
+    return { valid: false, error: 'Name contains invalid special characters' };
+  }
+
+  return { valid: true };
+}
+
+/**
  * Loads searches from storage
  */
 async function loadSearches() {
@@ -74,9 +196,15 @@ function showModal(title, search = null, index = null) {
   const nameInput = document.getElementById('searchName');
   const queryInput = document.getElementById('searchQuery');
   const errorDiv = document.getElementById('modalError');
+  const nameValidation = document.getElementById('nameValidation');
+  const queryValidation = document.getElementById('queryValidation');
 
   modalTitle.textContent = title;
   errorDiv.style.display = 'none';
+  nameValidation.textContent = '';
+  queryValidation.textContent = '';
+  nameInput.className = 'form-input';
+  queryInput.className = 'form-input';
 
   if (search) {
     nameInput.value = search.name;
@@ -90,6 +218,100 @@ function showModal(title, search = null, index = null) {
 
   modal.style.display = 'flex';
   nameInput.focus();
+}
+
+/**
+ * Validates name input in real-time
+ */
+function validateNameInput() {
+  const nameInput = document.getElementById('searchName');
+  const nameValidation = document.getElementById('nameValidation');
+  const name = nameInput.value.trim();
+
+  if (name.length === 0) {
+    nameInput.className = 'form-input';
+    nameValidation.textContent = '';
+    nameValidation.className = 'validation-indicator';
+    return;
+  }
+
+  // Check length
+  if (name.length > MAX_NAME_LENGTH) {
+    nameInput.className = 'form-input invalid';
+    nameValidation.textContent = `Too long (${name.length}/${MAX_NAME_LENGTH} chars)`;
+    nameValidation.className = 'validation-indicator invalid';
+    return;
+  }
+
+  // Security check
+  const validation = validateSearchName(name);
+  if (!validation.valid) {
+    nameInput.className = 'form-input invalid';
+    nameValidation.textContent = `⚠️ ${validation.error}`;
+    nameValidation.className = 'validation-indicator invalid';
+    return;
+  }
+
+  // Duplicate check
+  const duplicateCheck = checkDuplicate(name, '', editingIndex);
+  if (duplicateCheck.isDuplicate && duplicateCheck.type === 'name') {
+    nameInput.className = 'form-input invalid';
+    nameValidation.textContent = `⚠️ ${duplicateCheck.message}`;
+    nameValidation.className = 'validation-indicator invalid';
+    return;
+  }
+
+  // Valid
+  nameInput.className = 'form-input valid';
+  nameValidation.textContent = '✓ Valid';
+  nameValidation.className = 'validation-indicator valid';
+}
+
+/**
+ * Validates query input in real-time
+ */
+function validateQueryInput() {
+  const queryInput = document.getElementById('searchQuery');
+  const queryValidation = document.getElementById('queryValidation');
+  const q = queryInput.value.trim();
+
+  if (q.length === 0) {
+    queryInput.className = 'form-input';
+    queryValidation.textContent = '';
+    queryValidation.className = 'validation-indicator';
+    return;
+  }
+
+  // Check length
+  if (q.length > MAX_QUERY_LENGTH) {
+    queryInput.className = 'form-input invalid';
+    queryValidation.textContent = `Too long (${q.length}/${MAX_QUERY_LENGTH} chars)`;
+    queryValidation.className = 'validation-indicator invalid';
+    return;
+  }
+
+  // Security check
+  const validation = validateGmailQuery(q);
+  if (!validation.valid) {
+    queryInput.className = 'form-input invalid';
+    queryValidation.textContent = `⚠️ ${validation.error}`;
+    queryValidation.className = 'validation-indicator invalid';
+    return;
+  }
+
+  // Duplicate check
+  const duplicateCheck = checkDuplicate('', q, editingIndex);
+  if (duplicateCheck.isDuplicate && duplicateCheck.type === 'query') {
+    queryInput.className = 'form-input invalid';
+    queryValidation.textContent = `⚠️ ${duplicateCheck.message}`;
+    queryValidation.className = 'validation-indicator invalid';
+    return;
+  }
+
+  // Valid
+  queryInput.className = 'form-input valid';
+  queryValidation.textContent = '✓ Valid Gmail query';
+  queryValidation.className = 'validation-indicator valid';
 }
 
 /**
@@ -120,7 +342,7 @@ async function saveModal() {
   const name = nameInput.value.trim();
   const q = queryInput.value.trim();
 
-  // Validate
+  // Step 1: Basic length validation
   if (!validateString(name, MAX_NAME_LENGTH)) {
     showModalError('Invalid search name (1-100 characters required)');
     return;
@@ -131,15 +353,41 @@ async function saveModal() {
     return;
   }
 
+  // Step 2: Security validation for name
+  const nameValidation = validateSearchName(name);
+  if (!nameValidation.valid) {
+    showModalError(`Name validation failed: ${nameValidation.error}`);
+    return;
+  }
+
+  // Step 3: Security validation for query
+  const queryValidation = validateGmailQuery(q);
+  if (!queryValidation.valid) {
+    showModalError(`Query validation failed: ${queryValidation.error}`);
+    return;
+  }
+
+  // Step 4: Check for duplicates
+  const duplicateCheck = checkDuplicate(name, q, editingIndex);
+  if (duplicateCheck.isDuplicate) {
+    const proceed = confirm(`⚠️ Warning: ${duplicateCheck.message}\n\nDo you want to continue anyway?`);
+    if (!proceed) {
+      return;
+    }
+  }
+
+  // Step 5: Check max searches limit
+  if (editingIndex === null && currentSearches.length >= MAX_SEARCHES) {
+    showModalError(`Maximum ${MAX_SEARCHES} searches allowed`);
+    return;
+  }
+
+  // Step 6: Save
   if (editingIndex !== null) {
     // Edit existing
     currentSearches[editingIndex] = { name, q };
   } else {
     // Add new
-    if (currentSearches.length >= MAX_SEARCHES) {
-      showModalError(`Maximum ${MAX_SEARCHES} searches allowed`);
-      return;
-    }
     currentSearches.push({ name, q });
   }
 
@@ -273,6 +521,10 @@ async function init() {
       hideModal();
     }
   });
+
+  // Real-time validation
+  document.getElementById('searchName').addEventListener('input', validateNameInput);
+  document.getElementById('searchQuery').addEventListener('input', validateQueryInput);
 
   // Handle Enter key in inputs
   document.getElementById('searchName').addEventListener('keypress', (e) => {

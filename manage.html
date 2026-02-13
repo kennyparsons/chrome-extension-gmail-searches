@@ -35,10 +35,12 @@
         <div class="form-group">
           <label for="searchName" class="form-label">Search Name</label>
           <input type="text" id="searchName" class="form-input" placeholder="e.g., Unread" maxlength="100">
+          <div id="nameValidation" class="validation-indicator"></div>
         </div>
         <div class="form-group">
           <label for="searchQuery" class="form-label">Gmail Query</label>
           <input type="text" id="searchQuery" class="form-input" placeholder="e.g., is:unread" maxlength="500">
+          <div id="queryValidation" class="validation-indicator"></div>
         </div>
         <div id="modalError" class="error-message" style="display: none;"></div>
       </div>

@@ -244,6 +244,46 @@ body {
   border-radius: 6px;
 }
 
+.success-message {
+  color: #4caf50;
+  font-size: 13px;
+  margin-top: 12px;
+  padding: 10px;
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  border-radius: 6px;
+}
+
+.form-input.validating {
+  border-color: #ffa726;
+}
+
+.form-input.valid {
+  border-color: #4caf50;
+}
+
+.form-input.invalid {
+  border-color: #f44336;
+}
+
+.validation-indicator {
+  font-size: 11px;
+  margin-top: 4px;
+  color: #999;
+}
+
+.validation-indicator.checking {
+  color: #ffa726;
+}
+
+.validation-indicator.valid {
+  color: #4caf50;
+}
+
+.validation-indicator.invalid {
+  color: #f44336;
+}
+
 .modal-footer {
   padding: 16px 24px;
   border-top: 1px solid #333;
