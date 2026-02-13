@@ -1,5 +1,7 @@
 # 📧 Gmail Quick Search
 
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/kennyparsons/chrome-extension-gmail-searches/badge)](https://scorecard.dev/viewer/?uri=github.com/kennyparsons/chrome-extension-gmail-searches)
+
 Quick access to your saved Gmail searches. Click any search to jump directly to filtered results.
 
 ## ✨ Features
