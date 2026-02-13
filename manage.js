@@ -5,7 +5,7 @@
 
 'use strict';
 
-const STORAGE_KEY = 'wizmail-saved-searches-v1';
+const STORAGE_KEY = 'gmail-saved-searches-v1';
 const MAX_SEARCHES = 50;
 const MAX_NAME_LENGTH = 100;
 const MAX_QUERY_LENGTH = 500;

@@ -5,8 +5,18 @@
   "description": "Quick access to your saved Gmail searches. Click any search to jump directly to filtered results.",
   "permissions": ["storage", "tabs"],
   "host_permissions": ["https://mail.google.com/*"],
+  "icons": {
+    "16": "S.png",
+    "48": "S.png",
+    "128": "S.png"
+  },
   "action": {
     "default_popup": "popup.html",
+    "default_icon": {
+      "16": "S.png",
+      "48": "S.png",
+      "128": "S.png"
+    },
     "default_title": "Gmail Quick Search"
   },
   "content_security_policy": {

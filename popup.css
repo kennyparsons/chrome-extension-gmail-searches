@@ -48,6 +48,12 @@ body {
   background: var(--bg-secondary);
 }
 
+.header-icon {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+}
+
 .title {
   font-size: 15px;
   font-weight: 500;
