@@ -18,3 +18,8 @@ repomap/
 *~
 .vscode/
 .idea/
+
+# Node modules and test artifacts
+node_modules/
+coverage/
+*.log
