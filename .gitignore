@@ -23,3 +23,4 @@ repomap/
 node_modules/
 coverage/
 *.log
+dist/
