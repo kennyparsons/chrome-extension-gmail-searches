@@ -2,7 +2,9 @@
 
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/kennyparsons/chrome-extension-gmail-searches/badge)](https://scorecard.dev/viewer/?uri=github.com/kennyparsons/chrome-extension-gmail-searches)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Scorecard supply-chain security](https://github.com/kennyparsons/chrome-extension-gmail-searches/actions/workflows/scorecard.yml/badge.svg)](https://github.com/kennyparsons/chrome-extension-gmail-searches/actions/workflows/scorecard.yml)
+[![CodeQL](https://github.com/kennyparsons/chrome-extension-gmail-searches/actions/workflows/codeql.yml/badge.svg)](https://github.com/kennyparsons/chrome-extension-gmail-searches/actions/workflows/codeql.yml)
+[![Tests](https://github.com/kennyparsons/chrome-extension-gmail-searches/actions/workflows/test.yml/badge.svg)](https://github.com/kennyparsons/chrome-extension-gmail-searches/actions/workflows/test.yml)
+[![Snyk Security](https://github.com/kennyparsons/chrome-extension-gmail-searches/actions/workflows/snyk.yml/badge.svg)](https://github.com/kennyparsons/chrome-extension-gmail-searches/actions/workflows/snyk.yml)
 
 Quick access to your saved Gmail searches. Click any search to jump directly to filtered results.
 
