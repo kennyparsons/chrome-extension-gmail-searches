@@ -1,0 +1,24 @@
+{
+  "name": "gmail-quick-search",
+  "version": "2.0.0",
+  "description": "Chrome extension for quick access to saved Gmail searches",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "keywords": ["chrome-extension", "gmail", "search"],
+  "author": "Kenny Parsons",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": ["**/tests/**/*.test.js"],
+    "collectCoverageFrom": [
+      "*.js",
+      "!tests/**"
+    ]
+  }
+}
