@@ -6,16 +6,16 @@
   "permissions": ["storage", "tabs"],
   "host_permissions": ["https://mail.google.com/*"],
   "icons": {
-    "16": "S.png",
-    "48": "S.png",
-    "128": "S.png"
+    "16": "images/icon_16.png",
+    "48": "images/icon_48.png",
+    "128": "images/icon_128.png"
   },
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "S.png",
-      "48": "S.png",
-      "128": "S.png"
+      "16": "images/icon_16.png",
+      "48": "images/icon_48.png",
+      "128": "images/icon_128.png"
     },
     "default_title": "Gmail Quick Search"
   },
